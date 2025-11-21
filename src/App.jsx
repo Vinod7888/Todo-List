@@ -11,6 +11,9 @@ export default function App() {
     return JSON.parse(localStorage.getItem("toduItems")) || [];
   });
 
+  // Track which item is being edited
+  const [editIndex, setEditIndex] = useState(null);
+
   // Save to localStorage whenever todo state changes
   useEffect(() => {
     localStorage.setItem("toduItems", JSON.stringify(todo));
@@ -18,21 +21,50 @@ export default function App() {
 
   const addTodo = () => {
     let inpvalue = infREf.current.value;
-    const titlevalue = textAreaREf.current.value;
-    if (inpvalue.trim() !== "") {
-      const newTodo = { title: inpvalue, description: titlevalue };
-      setTodo([...todo, newTodo]);
-      infREf.current.value = "";
-      textAreaREf.current.value = "";
-    } else {
+    let descriptionValue = textAreaREf.current.value;
+
+    if (inpvalue.trim() === "") {
       alert("Add Todo");
+      return;
     }
+
+    // If editing
+    if (editIndex !== null) {
+      const updatedTodos = [...todo];
+      updatedTodos[editIndex] = {
+        title: inpvalue,
+        description: descriptionValue
+      };
+      setTodo(updatedTodos);
+      setEditIndex(null);
+    } else {
+      // If adding new
+      const newTodo = { title: inpvalue, description: descriptionValue };
+      setTodo([...todo, newTodo]);
+    }
+
+    // Clear input fields
+    infREf.current.value = "";
+    textAreaREf.current.value = "";
   };
 
   function deleteItem(delItem) {
     const newData = todo.filter((_, index) => index !== delItem);
     setTodo(newData);
+
+    // If deleted item was being edited → reset edit
+    if (editIndex === delItem) {
+      setEditIndex(null);
+      infREf.current.value = "";
+      textAreaREf.current.value = "";
+    }
   }
+
+  const editItem = (index) => {
+    setEditIndex(index);
+    infREf.current.value = todo[index].title;
+    textAreaREf.current.value = todo[index].description;
+  };
 
   useEffect(() => {
     AOS.init({ duration: 1000 });
@@ -57,21 +89,26 @@ export default function App() {
           {/* Left Section - Input */}
           <div className="col-md-4">
             <div className="bg-white p-4 rounded-4 shadow-sm d-flex flex-column gap-3 border-start border-4 border-primary-subtle">
-              <h4 className="text-primary mb-2 text-center"><span>Add</span> <span>New</span> <span>Task</span></h4>
+              <h4 className="text-primary mb-2 text-center">
+                {editIndex !== null ? "✏️ Edit Task" : "➕ Add New Task"}
+              </h4>
+
               <input
                 ref={infREf}
                 type="text"
                 className="form-control shadow-sm"
                 placeholder="📝 Enter Todo Title"
               />
+
               <input
                 ref={textAreaREf}
                 type='text'
                 className="form-control shadow-sm"
                 placeholder="✍️ Enter Todo Description"
               />
+
               <button onClick={addTodo} className="btn btn-success mt-2 fw-semibold shadow-sm">
-                <span className='plusIcon me-2'> ➕ </span>Add Todo
+                {editIndex !== null ? "💾 Save Changes" : "➕ Add Todo"}
               </button>
             </div>
           </div>
@@ -92,16 +129,27 @@ export default function App() {
                   todo.map((data, index) => (
                     <div key={index}
                       className="myList d-flex justify-content-between align-items-start p-3 mb-3 border rounded-3 shadow-sm bg-light-subtle">
-                      <div className=''>
+
+                      <div>
                         <h5 className="text-dark mb-1">✅ {data.title} </h5>
-                        <p className="text-muted small mb-0">
-                          {data.description}
-                        </p>
+                        <p className="text-muted small mb-0">{data.description}</p>
                       </div>
-                      <button
-                        onClick={() => deleteItem(index)}
-                        className="btn btn-sm btn-outline-danger ms-3"
-                      >🗑️ Delete</button>
+
+                      <div className="d-flex gap-2">
+                        <button
+                          onClick={() => editItem(index)}
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          ✏️ Edit
+                        </button>
+
+                        <button
+                          onClick={() => deleteItem(index)}
+                          className="btn btn-sm btn-outline-danger"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
                     </div>
                   ))
               }
