@@ -74,7 +74,7 @@ export default function App() {
     <div className="min-vh-100 bg-light">
       {/* Header */}
       <div className="container-fluid bg-primary text-white py-4 text-center shadow-sm">
-        <h1 className="fw-bold display-6">📝 TODO LIST APP...</h1>
+        <h1 className="fw-bold display-6">📝 TODO LIST APP..</h1>
         <p className="mb-0">Stay organized and productive</p>
       </div>
 
